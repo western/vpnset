@@ -1,0 +1,23 @@
+
+# .alias file for root
+
+
+# 31 red
+# 32 green
+# 33 yellow
+# 34 blue
+# 35 magenta
+# 36 cyan
+
+STARTCOLOR='\e[1;31m';
+ENDCOLOR="\e[0m"
+export PS1="\n$STARTCOLOR\u@\h $ENDCOLOR[\D{%F %T}] \w \n > "
+
+
+export LS_OPTIONS='--color=auto'
+eval "$(dircolors)"
+alias ls='ls $LS_OPTIONS'
+alias ll='ls $LS_OPTIONS -lA'
+
+
+alias vi=vim
