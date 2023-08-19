@@ -259,7 +259,7 @@ function openvpn_client_gen {
         TA_KEY=$(cat pki/ta.key)
     popd
 
-    cat << L14HEREDOC > /root/${PREFIX}_ovpn_client_$title.ovpn
+    cat << L14HEREDOC > /root/${PREFIX}_ovpn_$title.ovpn
 
 client
 dev tun
@@ -334,7 +334,7 @@ AllowedIPs = 10.8.0.$last_int/32
 L11HEREDOC
 
 
-    cat << L12HEREDOC > /root/${PREFIX}_wg_client_$title.conf
+    cat << L12HEREDOC > /root/${PREFIX}_wg_$title.conf
 
 [Interface]
 PrivateKey = $PRIVATE_CLIENT
