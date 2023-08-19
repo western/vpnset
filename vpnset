@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version 0.2
+# version 0.3
 #
 # wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpnset
 #
