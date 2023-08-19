@@ -63,6 +63,7 @@ function root_prepare {
         wget https://raw.githubusercontent.com/western/vpnset/dev/.alias
         echo "" >> .bashrc
         echo "source .alias" >> .bashrc
+        source .alias
     popd
 
 
