@@ -18,24 +18,92 @@ function main {
     notice "from SRV_IP [$SRV_IP] WG_SRV_PORT [$WG_SRV_PORT] OV_SRV_PORT [$OV_SRV_PORT]"
 
 
+    PS3='Please enter your choice: '
+    options=("init" "wireguard_status" "wireguard_new_client" "openvpn_status" "openvpn_new_client" "quit")
+    select opt in "${options[@]}"
+    do
+        case $opt in
+            "init")
 
+                root_prepare
 
-    root_prepare
+                wireguard_prepare
+                wireguard_client_gen "client1"
+                wireguard_client_gen "client2"
+                wireguard_client_gen "client3"
+                wireguard_client_gen "client4"
 
+                openvpn_prepare
+                openvpn_client_gen "client1"
+                openvpn_client_mobile_gen "client2"
+                openvpn_client_gen "client3"
+                openvpn_client_gen "client4"
 
+                break
 
-    wireguard_prepare
-    wireguard_client_gen "client1"
-    wireguard_client_gen "client2"
-    wireguard_client_gen "client3"
-    wireguard_client_gen "client4"
+                ;;
+            "wireguard_status")
 
+                systemctl status wg-quick@wg0.service
 
-    openvpn_prepare
-    openvpn_client_gen "client1"
-    openvpn_client_mobile_gen "client2"
-    openvpn_client_gen "client3"
-    openvpn_client_gen "client4"
+                break
+
+                ;;
+            "wireguard_new_client")
+
+                read -p "Please input client name: " response
+                echo $response
+
+                if [ "$response" != "" ]; then
+                    wireguard_client_gen $response
+                else
+                    echo "You do not enter name"
+                fi
+
+                break
+
+                ;;
+            "openvpn_status")
+
+                systemctl status openvpn@server
+
+                break
+
+                ;;
+            "openvpn_new_client")
+
+                read -p "Please input client name: " response
+                echo $response
+
+                if [ "$response" != "" ]; then
+                    openvpn_client_gen $response
+                else
+                    echo "You do not enter name"
+                fi
+
+                break
+
+                ;;
+            "quit")
+                break
+                ;;
+            *) echo "invalid option $REPLY";;
+        esac
+    done
+
+    #root_prepare
+
+    #wireguard_prepare
+    #wireguard_client_gen "client1"
+    #wireguard_client_gen "client2"
+    #wireguard_client_gen "client3"
+    #wireguard_client_gen "client4"
+
+    #openvpn_prepare
+    #openvpn_client_gen "client1"
+    #openvpn_client_mobile_gen "client2"
+    #openvpn_client_gen "client3"
+    #openvpn_client_gen "client4"
 
 }
 
