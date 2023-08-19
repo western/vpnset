@@ -1,0 +1,216 @@
+#!/bin/bash
+
+# wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpnset
+#
+
+SRV_IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+SRV_PORT="51830"
+
+
+function main {
+    notice "vpnset"
+    notice "from SRV_IP [$SRV_IP] [$SRV_PORT]"
+
+
+
+
+    root_prepare
+
+}
+
+# ------------------------------------------------------------------------------
+
+
+function root_prepare {
+
+    notice "root_prepare"
+
+    if ! whoami | grep -q root; then
+        err 'root required. exit.'
+    fi
+
+
+    if cat /etc/*release* | grep -q 'VERSION="11 (bullseye)"'; then
+        warn 'Debian 11 detected.'
+        apt-get install -y vim mc less mlocate git curl wget aptitude
+        apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn
+    fi
+
+
+    pushd /root/
+        wget https://raw.githubusercontent.com/western/vpnset/dev/.vimrc
+        wget https://raw.githubusercontent.com/western/vpnset/dev/.alias
+        echo "" >> .bashrc
+        echo "source .alias" >> .bashrc
+    popd
+
+
+    local SYSCTL="/etc/sysctl.conf"
+    echo "" >> $SYSCTL
+    echo "net.ipv4.ip_forward = 1" >> $SYSCTL
+    echo "net.ipv4.icmp_echo_ignore_all = 1" >> $SYSCTL
+    sysctl -p
+
+
+    # show
+    #iptables -L -vn
+
+    # all reset
+    iptables -F
+    iptables -X
+    iptables -t nat -F
+    iptables -t nat -X
+
+    # set
+    iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+
+
+    # iptables-persistent
+    /sbin/iptables-save > /etc/iptables/rules.v4
+
+
+
+
+    local DNSCRYPTSOCKET="/usr/lib/systemd/system/dnscrypt-proxy.socket"
+    echo "" >> $DNSCRYPTSOCKET
+    echo "[Socket]" >> $DNSCRYPTSOCKET
+    echo "ListenStream=127.0.0.1:53" >> $DNSCRYPTSOCKET
+    echo "ListenDatagram=127.0.0.1:53" >> $DNSCRYPTSOCKET
+    echo "" >> $DNSCRYPTSOCKET
+    echo "ListenStream=10.8.0.1:53" >> $DNSCRYPTSOCKET
+    echo "ListenDatagram=10.8.0.1:53" >> $DNSCRYPTSOCKET
+
+    systemctl daemon-reload ; systemctl restart dnscrypt-proxy.socket ; systemctl restart dnscrypt-proxy.service
+
+
+    echo "" >> /etc/dhcp/dhclient.conf
+    echo "prepend domain-name-servers 127.0.0.1;" >> /etc/dhcp/dhclient.conf
+    dhclient -r && dhclient
+
+
+
+    pushd /etc/wireguard
+        wg genkey | tee /etc/wireguard/private_srv | wg pubkey | tee /etc/wireguard/public_srv
+    popd
+
+    local PRIVATE_SRV=$(cat /etc/wireguard/private_srv)
+    cat << L10HEREDOC > /etc/wireguard/wg0.conf
+
+[Interface]
+PrivateKey = $PRIVATE_SRV
+Address = 10.8.0.1/24
+ListenPort = $SRV_PORT
+
+L10HEREDOC
+
+    systemctl enable wg-quick@wg0.service
+    systemctl start wg-quick@wg0.service
+
+
+    wireguard_client_gen "client1"
+    wireguard_client_gen "client2"
+    wireguard_client_gen "client3"
+    wireguard_client_gen "client4"
+
+
+    systemctl restart wg-quick@wg0.service
+
+
+
+}
+
+# ------------------------------------------------------------------------------
+
+function wireguard_client_gen {
+    local     title=$1
+    notice "wireguard_client_gen [$title]"
+
+    pushd /etc/wireguard
+        wg genkey | tee /etc/wireguard/private_$title | wg pubkey | tee /etc/wireguard/public_$title
+    popd
+
+    local counter='/root/counter_ip_addr'
+    last_int=2
+    if [ ! -f $counter ]; then
+        echo "2" > $counter
+    else
+        last_int=$(cat $counter)
+        last_int=$((last_int+1))
+    fi
+    notice "last_int [$last_int]"
+
+    local PRIVATE_SRV=$(cat /etc/wireguard/private_srv)
+    local PUBLIC_SRV=$(cat /etc/wireguard/public_srv)
+    local PRIVATE_CLIENT=$(cat /etc/wireguard/private_$title)
+    local PUBLIC_CLIENT=$(cat /etc/wireguard/public_$title)
+
+    cat << L11HEREDOC >> /etc/wireguard/wg0.conf
+
+[Peer]
+PublicKey = $PUBLIC_CLIENT
+AllowedIPs = 10.8.0.$last_int/32
+
+L11HEREDOC
+
+
+    cat << L12HEREDOC > /root/wg_client_$title.conf
+
+[Interface]
+PrivateKey = $PRIVATE_CLIENT
+Address = 10.8.0.$last_int/32
+DNS = 127.0.0.1
+
+[Peer]
+PublicKey = $PUBLIC_SRV
+Endpoint = $SRV_IP:$SRV_PORT
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 20
+
+L12HEREDOC
+
+}
+
+# ------------------------------------------------------------------------------
+
+
+
+# ------------------------------------------------------------------------------
+
+function notice {
+    builtin echo -en "\033[1m"
+    echo "NOTICE: $@"
+    builtin echo -en "\033[0m"
+}
+
+function success {
+    builtin echo -en "\033[1;32m"
+    echo "SUCCESS: $@"
+    builtin echo -en "\033[0m"
+}
+
+function warn {
+    builtin echo -en "\033[1;33m"
+    echo "WARN: $@"
+    builtin echo -en "\033[0m"
+}
+
+function err {
+    builtin echo -en "\033[1;31m"
+    echo "ERR: $@"
+    builtin echo -en "\033[0m"
+    exit 1
+}
+
+function fatal {
+    builtin echo -en "\033[1;31m"
+    echo "FATAL: $@"
+    builtin echo -en "\033[0m"
+    exit 1
+}
+
+# ------------------------------------------------------------------------------
+
+main
+
+
+
