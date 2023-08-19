@@ -33,7 +33,7 @@ function main {
 
     openvpn_prepare
     openvpn_client_gen "client1"
-    openvpn_client_gen "client2"
+    openvpn_client_mobile_gen "client2"
     openvpn_client_gen "client3"
     openvpn_client_gen "client4"
 
@@ -235,15 +235,7 @@ function openvpn_client_gen {
 
 
 
-    local counter='/root/counter_ip_addr'
-    last_int=2
-    if [ ! -f $counter ]; then
-        echo "2" > $counter
-    else
-        last_int=$(cat $counter)
-        last_int=$((last_int+1))
-    fi
-    notice "last_int [$last_int]"
+
 
     local CA_CRT=""
     local CLIENT_CRT=""
@@ -302,6 +294,68 @@ L14HEREDOC
 
 # ------------------------------------------------------------------------------
 
+function openvpn_client_mobile_gen {
+    local     title=$1
+    notice "openvpn_client_mobile_gen [$title]"
+
+
+
+
+
+    local CA_CRT=""
+    local CLIENT_CRT=""
+    local CLIENT_KEY=""
+    local TA_KEY=""
+    pushd /root/easy-rsa
+        /usr/share/easy-rsa/easyrsa gen-req $title nopass
+        /usr/share/easy-rsa/easyrsa sign-req client $title
+
+        CA_CRT=$(cat pki/ca.crt)
+        CLIENT_CRT=$(cat pki/issued/$title.crt)
+        CLIENT_KEY=$(cat pki/private/$title.key)
+        TA_KEY=$(cat pki/ta.key)
+    popd
+
+    cat << L15HEREDOC > /root/${PREFIX}_ovpn_$title.ovpn
+
+
+client
+dev tun
+proto udp
+remote $SRV_IP
+port $OV_SRV_PORT
+cipher AES-128-CBC
+key-direction 1
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+verb 3
+data-ciphers AES-128-GCM
+compress lz4-v2
+push "compress lz4-v2"
+dhcp-option DNS 10.8.0.1
+<ca>
+$CA_CRT
+</ca>
+<cert>
+$CLIENT_CRT
+</cert>
+<key>
+$CLIENT_KEY
+</key>
+<tls-auth>
+$TA_KEY
+</tls-auth>
+
+
+
+L15HEREDOC
+
+}
+
+# ------------------------------------------------------------------------------
+
 function wireguard_client_gen {
     local     title=$1
     notice "wireguard_client_gen [$title]"
@@ -317,6 +371,7 @@ function wireguard_client_gen {
     else
         last_int=$(cat $counter)
         last_int=$((last_int+1))
+        echo $last_int > $counter
     fi
     notice "last_int [$last_int]"
 
