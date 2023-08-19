@@ -317,7 +317,7 @@ function openvpn_client_mobile_gen {
         TA_KEY=$(cat pki/ta.key)
     popd
 
-    cat << L15HEREDOC > /root/${PREFIX}_ovpn_$title.ovpn
+    cat << L15HEREDOC > /root/${PREFIX}_ovpn_mobile_$title.ovpn
 
 
 client
