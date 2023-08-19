@@ -1,20 +1,41 @@
 #!/bin/bash
 
+# version 0.2
+#
 # wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpnset
 #
+#
 
+
+PREFIX="XX"
 SRV_IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
-SRV_PORT="51830"
+WG_SRV_PORT="51830"
+OV_SRV_PORT="443"
 
 
 function main {
     notice "vpnset"
-    notice "from SRV_IP [$SRV_IP] [$SRV_PORT]"
+    notice "from SRV_IP [$SRV_IP] WG_SRV_PORT [$WG_SRV_PORT] OV_SRV_PORT [$OV_SRV_PORT]"
 
 
 
 
     root_prepare
+
+
+
+    wireguard_prepare
+    wireguard_client_gen "client1"
+    wireguard_client_gen "client2"
+    wireguard_client_gen "client3"
+    wireguard_client_gen "client4"
+
+
+    openvpn_prepare
+    openvpn_client_gen "client1"
+    openvpn_client_gen "client2"
+    openvpn_client_gen "client3"
+    openvpn_client_gen "client4"
 
 }
 
@@ -32,7 +53,7 @@ function root_prepare {
 
     if cat /etc/*release* | grep -q 'VERSION="11 (bullseye)"'; then
         warn 'Debian 11 detected.'
-        apt-get install -y vim mc less mlocate git curl wget aptitude
+        apt-get install -y vim mc less mlocate git curl wget aptitude easy-rsa
         apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn
     fi
 
@@ -89,6 +110,23 @@ function root_prepare {
 
 
 
+}
+
+# ------------------------------------------------------------------------------
+
+function wireguard_prepare {
+
+    notice "wireguard_prepare"
+
+    if ! whoami | grep -q root; then
+        err 'root required. exit.'
+    fi
+
+
+
+
+
+
     pushd /etc/wireguard
         wg genkey | tee /etc/wireguard/private_srv | wg pubkey | tee /etc/wireguard/public_srv
     popd
@@ -99,7 +137,7 @@ function root_prepare {
 [Interface]
 PrivateKey = $PRIVATE_SRV
 Address = 10.8.0.1/24
-ListenPort = $SRV_PORT
+ListenPort = $WG_SRV_PORT
 
 L10HEREDOC
 
@@ -107,15 +145,158 @@ L10HEREDOC
     systemctl start wg-quick@wg0.service
 
 
-    wireguard_client_gen "client1"
-    wireguard_client_gen "client2"
-    wireguard_client_gen "client3"
-    wireguard_client_gen "client4"
+}
+
+# ------------------------------------------------------------------------------
+
+function openvpn_prepare {
+
+    notice "openvpn_prepare"
+
+    if ! whoami | grep -q root; then
+        err 'root required. exit.'
+    fi
 
 
-    systemctl restart wg-quick@wg0.service
 
 
+
+    mkdir /root/easy-rsa
+
+    pushd /root/easy-rsa
+        /usr/share/easy-rsa/easyrsa init-pki
+        /usr/share/easy-rsa/easyrsa build-ca nopass
+        /usr/share/easy-rsa/easyrsa gen-dh
+
+        /usr/share/easy-rsa/easyrsa gen-req vpn-server nopass
+        /usr/share/easy-rsa/easyrsa sign-req server vpn-server
+        openvpn --genkey secret pki/ta.key
+    popd
+
+    mkdir -p /etc/openvpn/keys
+    cp -r pki/* /etc/openvpn/keys/
+
+
+
+
+
+    cat << L13HEREDOC > /etc/openvpn/server.conf
+
+port $OV_SRV_PORT
+proto udp
+dev tun
+ca /etc/openvpn/keys/ca.crt
+cert /etc/openvpn/keys/issued/vpn-server.crt
+key /etc/openvpn/keys/private/vpn-server.key
+dh /etc/openvpn/keys/dh.pem
+tls-auth /etc/openvpn/keys/ta.key 0
+
+client-config-dir ccd
+
+topology subnet
+server 10.8.0.0 255.255.255.0
+
+push "redirect-gateway def1"
+#push "dhcp-option DNS 8.8.8.8"
+#push "dhcp-option DNS 10.8.0.1"
+
+
+keepalive 10 120
+max-clients 32
+
+client-to-client
+
+ifconfig-pool-persist /var/log/openvpn/ipp.txt
+persist-key
+persist-tun
+status /var/log/openvpn/openvpn-status.log
+log-append /var/log/openvpn/openvpn.log
+verb 4
+mute 20
+daemon
+mode server
+tls-server
+
+
+#allow-compression yes
+#comp-lzo yes
+#push "comp-lzo yes"
+
+L13HEREDOC
+
+
+}
+
+# ------------------------------------------------------------------------------
+
+function openvpn_client_gen {
+    local     title=$1
+    notice "openvpn_client_gen [$title]"
+
+
+
+    local counter='/root/counter_ip_addr'
+    last_int=2
+    if [ ! -f $counter ]; then
+        echo "2" > $counter
+    else
+        last_int=$(cat $counter)
+        last_int=$((last_int+1))
+    fi
+    notice "last_int [$last_int]"
+
+    local CA_CRT=""
+    local CLIENT_CRT=""
+    local CLIENT_KEY=""
+    local TA_KEY=""
+    pushd /root/easy-rsa
+        /usr/share/easy-rsa/easyrsa gen-req $title nopass
+        /usr/share/easy-rsa/easyrsa sign-req client $title
+
+        CA_CRT=$(cat pki/ca.crt)
+        CLIENT_CRT=$(cat pki/issued/$title.crt)
+        CLIENT_KEY=$(cat pki/private/$title.key)
+        TA_KEY=$(cat pki/ta.key)
+    popd
+
+    cat << L14HEREDOC > /root/${PREFIX}_ovpn_client_$title.ovpn
+
+client
+dev tun
+remote $SRV_IP
+port $OV_SRV_PORT
+proto udp
+keepalive 10 120
+float
+verb 1
+route-method exe
+redirect-gateway
+resolv-retry infinite
+nobind
+remote-cert-tls server
+persist-key
+persist-tun
+ca [inline]
+cert [inline]
+key [inline]
+tls-auth [inline] 1
+data-ciphers AES-128-GCM
+compress lz4-v2
+push "compress lz4-v2"
+<ca>
+$CA_CRT
+</ca>
+<cert>
+$CLIENT_CRT
+</cert>
+<key>
+$CLIENT_KEY
+</key>
+<tls-auth>
+$TA_KEY
+</tls-auth>
+
+L14HEREDOC
 
 }
 
@@ -153,7 +334,7 @@ AllowedIPs = 10.8.0.$last_int/32
 L11HEREDOC
 
 
-    cat << L12HEREDOC > /root/wg_client_$title.conf
+    cat << L12HEREDOC > /root/${PREFIX}_wg_client_$title.conf
 
 [Interface]
 PrivateKey = $PRIVATE_CLIENT
@@ -162,11 +343,13 @@ DNS = 127.0.0.1
 
 [Peer]
 PublicKey = $PUBLIC_SRV
-Endpoint = $SRV_IP:$SRV_PORT
+Endpoint = $SRV_IP:$WG_SRV_PORT
 AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 20
 
 L12HEREDOC
+
+    systemctl restart wg-quick@wg0.service
 
 }
 
