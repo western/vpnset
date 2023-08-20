@@ -11,19 +11,28 @@ wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpn
 ## when you run
 
 you can choose this options:
-* "init"
+1. "init"
 
   if you primary get code and setup server
-* "wireguard_status"
+  
+2. "wireguard_status"
 
   systemctl status wg-quick@wg0.service
-* "wireguard_new_client"
+  
+3. "wireguard_new_client"
 
   make new client file
-* "openvpn_status"
+  
+4. "openvpn_status"
 
   systemctl status openvpn@server
-* "openvpn_new_client"
+  
+5. "openvpn_new_client"
 
   new ovpn file generate
-* "quit"
+  
+6. "wireguard_enable"
+
+7. "openvpn_enable"
+  
+8. "quit"
