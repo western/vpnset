@@ -7,7 +7,7 @@
 #
 
 
-PREFIX="XX"
+PREFIX="ShadowXX"
 SRV_IP=$(ip addr show eth0 | grep "inet\b" | head -1 | awk '{print $2}' | cut -d/ -f1)
 WG_SRV_PORT="51830"
 OV_SRV_PORT="443"
