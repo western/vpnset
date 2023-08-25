@@ -39,6 +39,8 @@ function main {
                 openvpn_client_gen "client3"
                 openvpn_client_gen "client4"
 
+                shadowsocks_prepare
+
                 break
 
                 ;;
@@ -143,7 +145,7 @@ function root_prepare {
     if cat /etc/*release* | grep -q 'VERSION="11 (bullseye)"'; then
         warn 'Debian 11 detected.'
         apt-get install -y vim mc less mlocate git curl wget aptitude easy-rsa
-        apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn
+        apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn shadowsocks-libev
     fi
 
 
@@ -504,6 +506,38 @@ L12HEREDOC
 
 # ------------------------------------------------------------------------------
 
+
+function shadowsocks_prepare {
+
+    notice "shadowsocks_prepare"
+
+    if ! whoami | grep -q root; then
+        err 'root required. exit.'
+    fi
+
+    cp /etc/shadowsocks-libev/config.json /etc/shadowsocks-libev/config.json.orig
+
+    local PASW=$(echo $RANDOM | md5sum | head -c 20)
+
+cat << L16HEREDOC > /etc/shadowsocks-libev/config.json
+
+{
+    "server":["$SRV_IP"],
+    "mode":"tcp_and_udp",
+    "server_port":8388,
+    "local_port":1080,
+    "password":"$PASW",
+    "timeout":86400,
+    "method":"chacha20-ietf-poly1305"
+}
+
+L16HEREDOC
+
+    systemctl restart shadowsocks-libev.service
+
+}
+
+# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
