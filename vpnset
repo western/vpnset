@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version 0.4
+# version 0.5
 #
 # wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpnset
 #
@@ -141,11 +141,19 @@ function root_prepare {
         err 'root required. exit.'
     fi
 
+    if cat /etc/*release* | grep -q 'VERSION="12 (bookworm)"'; then
+        warn 'Debian 12 detected.'
+        apt-get install -y vim mc less mlocate git curl wget aptitude easy-rsa
+        apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn shadowsocks-libev
+        apt-get remove -y zabbix-agent-timeweb
+    fi
+
 
     if cat /etc/*release* | grep -q 'VERSION="11 (bullseye)"'; then
         warn 'Debian 11 detected.'
         apt-get install -y vim mc less mlocate git curl wget aptitude easy-rsa
         apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn shadowsocks-libev
+        apt-get remove -y zabbix-agent-timeweb
     fi
 
 
