@@ -214,6 +214,37 @@ function root_prepare {
 
 # ------------------------------------------------------------------------------
 
+function dnscrypt_proxy_opt {
+
+    notice "dnscrypt_proxy opt install"
+
+    if ! whoami | grep -q root; then
+        err 'root required. exit.'
+    fi
+
+
+    pushd /opt/
+        wget https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/2.1.5/dnscrypt-proxy-linux_x86_64-2.1.5.tar.gz
+        tar xf dnscrypt-proxy-linux_x86_64-2.1.5.tar.gz --transform s/linux-x86_64/dnscrypt-proxy/
+    popd
+
+    mkdir -p /etc/dnscrypt-proxy /var/log/dnscrypt-proxy
+
+
+    pushd /etc/dnscrypt-proxy
+        wget https://raw.githubusercontent.com/western/vpnset/dev/dnscrypt-proxy.toml
+    popd
+
+
+    pushd /lib/systemd/system/
+        wget https://raw.githubusercontent.com/western/vpnset/dev/dnscrypt-proxy.service
+        ln -s /lib/systemd/system/dnscrypt-proxy.service /etc/systemd/system/multi-user.target.wants/
+    popd
+
+}
+
+# ------------------------------------------------------------------------------
+
 function wireguard_prepare {
 
     notice "wireguard_prepare"
