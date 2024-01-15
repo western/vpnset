@@ -180,7 +180,7 @@ function root_prepare {
 
 
     # show
-    #iptables -L -vn
+    #iptables -L -vn -t nat
 
     # all reset
     iptables -F
