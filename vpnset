@@ -144,7 +144,7 @@ function root_prepare {
     if cat /etc/*release* | grep -q 'VERSION="12 (bookworm)"'; then
         warn 'Debian 12 detected.'
         apt-get update && apt-get upgrade -u
-        apt-get install -y vim mc less mlocate git curl wget aptitude easy-rsa
+        apt-get install -y vim mc less lsof mlocate git curl wget aptitude easy-rsa
         apt-get install -y iptables iptables-persistent wireguard openvpn shadowsocks-libev
         apt-get remove -y zabbix-agent-timeweb
 
@@ -157,7 +157,7 @@ function root_prepare {
     if cat /etc/*release* | grep -q 'VERSION="11 (bullseye)"'; then
         warn 'Debian 11 detected.'
         apt-get update && apt-get upgrade -u
-        apt-get install -y vim mc less mlocate git curl wget aptitude easy-rsa
+        apt-get install -y vim mc less lsof mlocate git curl wget aptitude easy-rsa
         apt-get install -y iptables iptables-persistent dnscrypt-proxy wireguard openvpn shadowsocks-libev
         apt-get remove -y zabbix-agent-timeweb
     fi
