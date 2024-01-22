@@ -215,6 +215,10 @@ function root_prepare {
     fi
 
 
+    systemctl disable systemd-resolved
+    systemctl stop systemd-resolved
+
+
     echo "" >> /etc/dhcp/dhclient.conf
     echo "prepend domain-name-servers 127.0.0.1;" >> /etc/dhcp/dhclient.conf
     dhclient -r && dhclient
@@ -249,6 +253,7 @@ function dnscrypt_proxy_opt {
         wget https://raw.githubusercontent.com/western/vpnset/dev/dnscrypt-proxy.service
         ln -s /lib/systemd/system/dnscrypt-proxy.service /etc/systemd/system/multi-user.target.wants/
     popd
+
 
 
     systemctl daemon-reload ; systemctl restart dnscrypt-proxy.service
