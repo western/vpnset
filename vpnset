@@ -8,14 +8,15 @@
 
 
 PREFIX="ShadowXX"
-SRV_IP=$(ip addr show eth0 | grep "inet\b" | head -1 | awk '{print $2}' | cut -d/ -f1)
+FISRT_INTERFACE=$(ip -br l | awk '$1 !~ "lo|vir|wl" { print $1}' | head -1)
+SRV_IP=$(ip addr show $FISRT_INTERFACE | grep "inet\b" | head -1 | awk '{print $2}' | cut -d/ -f1)
 WG_SRV_PORT="51830"
 OV_SRV_PORT="443"
 
 
 function main {
     notice "vpnset"
-    notice "from SRV_IP [$SRV_IP] WG_SRV_PORT [$WG_SRV_PORT] OV_SRV_PORT [$OV_SRV_PORT]"
+    notice "from FISRT_INTERFACE [$FISRT_INTERFACE] SRV_IP [$SRV_IP] WG_SRV_PORT [$WG_SRV_PORT] OV_SRV_PORT [$OV_SRV_PORT]"
 
 
     PS3='Please enter your choice: '
