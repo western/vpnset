@@ -6,7 +6,9 @@ setup openvpn and wireguard server
 
 ```console
 wget --no-cache https://raw.githubusercontent.com/western/vpnset/refs/heads/dev/vpnset && chmod +x vpnset
+```
 
+```console
 ./vpnset
 ```
 
