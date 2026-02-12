@@ -4,9 +4,11 @@ setup openvpn and wireguard server
 
 ## how
 
-wget https://raw.githubusercontent.com/western/vpnset/refs/heads/dev/vpnset && chmod +x vpnset
+```console
+wget --no-cache https://raw.githubusercontent.com/western/vpnset/refs/heads/dev/vpnset && chmod +x vpnset
 
 ./vpnset
+```
 
 ## when you run
 
