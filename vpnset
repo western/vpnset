@@ -35,6 +35,9 @@ function main {
             
             "wireguard_init")
                 
+                # check this
+                # /usr/lib/systemd/system/dnscrypt-proxy.socket
+                
                 wireguard_prepare
                 wireguard_client_gen "client1"
                 wireguard_client_gen "client2"
@@ -159,7 +162,7 @@ function root_prepare {
         wget https://raw.githubusercontent.com/western/vpnset/dev/.alias
         echo "" >> .bashrc
         echo "source .alias" >> .bashrc
-        source .alias
+        source /root/.alias
     popd
     
     
