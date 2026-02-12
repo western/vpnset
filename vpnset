@@ -20,20 +20,32 @@ function main {
 
 
     PS3='Please enter your choice: '
-    options=("init" "wireguard_status" "wireguard_new_client" "openvpn_status" "openvpn_new_client" "wireguard_enable" "openvpn_enable" "quit")
+    options=("init" "wireguard_init" "openvpn_init" "wireguard_status" "wireguard_new_client" "openvpn_status" "openvpn_new_client" "wireguard_enable" "openvpn_enable" "quit")
     select opt in "${options[@]}"
     do
         case $opt in
+            
             "init")
 
                 root_prepare
+                
+                break
 
+                ;;
+            
+            "wireguard_init")
+                
                 wireguard_prepare
                 wireguard_client_gen "client1"
                 wireguard_client_gen "client2"
                 wireguard_client_gen "client3"
                 wireguard_client_gen "client4"
 
+                break
+
+                ;;
+            "openvpn_init")
+                
                 openvpn_prepare
                 openvpn_client_gen "client1"
                 openvpn_client_mobile_gen "client2"
