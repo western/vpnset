@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version 0.5
+# version 0.6
 #
 # wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpnset
 #
@@ -141,7 +141,23 @@ function root_prepare {
     if ! whoami | grep -q root; then
         err 'root required. exit.'
     fi
+    
+    if cat /etc/*release* | grep -q 'VERSION="13 (trixie)"'; then
+        warn 'Debian 13 detected.'
+        apt-get update && apt-get upgrade -u
+        apt-get install -y vim mc less lsof plocate git curl wget aptitude easy-rsa
+        apt-get install -y iptables iptables-persistent wireguard 
+        apt-get remove -y zabbix-agent-timeweb
 
+        # debian13 dnscrypt-proxy setup
+        
+        
+        apt-get install -y dnscrypt-proxy
+        systemctl disable systemd-resolved
+        systemctl stop systemd-resolved
+        
+    fi
+    
     if cat /etc/*release* | grep -q 'VERSION="12 (bookworm)"'; then
         warn 'Debian 12 detected.'
         apt-get update && apt-get upgrade -u
