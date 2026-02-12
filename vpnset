@@ -154,6 +154,18 @@ function root_prepare {
         err 'root required. exit.'
     fi
     
+    pushd /root/
+        wget https://raw.githubusercontent.com/western/vpnset/dev/.vimrc
+        wget https://raw.githubusercontent.com/western/vpnset/dev/.alias
+        echo "" >> .bashrc
+        echo "source .alias" >> .bashrc
+        source .alias
+    popd
+    
+    
+    # ------------------------------------------------------------------------------
+    
+    
     if cat /etc/*release* | grep -q 'VERSION="13 (trixie)"'; then
         warn 'Debian 13 detected.'
         apt-get update && apt-get upgrade -u
@@ -196,13 +208,7 @@ function root_prepare {
     fi
 
 
-    pushd /root/
-        wget https://raw.githubusercontent.com/western/vpnset/dev/.vimrc
-        wget https://raw.githubusercontent.com/western/vpnset/dev/.alias
-        echo "" >> .bashrc
-        echo "source .alias" >> .bashrc
-        source .alias
-    popd
+    
 
 
     local SYSCTL="/etc/sysctl.conf"
