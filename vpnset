@@ -14,6 +14,11 @@ WG_SRV_PORT="51830"
 OV_SRV_PORT="443"
 
 
+if [ "$PREFIX" = "ShadowXX" ]; then
+    err 'Please change PREFIX value'
+fi
+
+
 function main {
     notice "vpnset"
     notice "from FIRST_INTERFACE [$FIRST_INTERFACE] SRV_IP [$SRV_IP] WG_SRV_PORT [$WG_SRV_PORT] OV_SRV_PORT [$OV_SRV_PORT]"
