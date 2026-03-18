@@ -2,13 +2,13 @@
 
 # version 0.1
 #
-# wget https://raw.githubusercontent.com/western/vpnset/dev/init && chmod +x init
+# wget https://raw.githubusercontent.com/western/vpnset/dev/root_prepare && chmod +x root_prepare
 #
 #
 
 function main {
     
-    notice "start init"
+    notice "start main"
     
     
     root_prepare
