@@ -9,10 +9,9 @@
 function main {
     
     notice "start init"
-    #notice "from FIRST_INTERFACE [$FIRST_INTERFACE] SRV_IP [$SRV_IP] WG_SRV_PORT [$WG_SRV_PORT] OV_SRV_PORT [$OV_SRV_PORT]"
+    
     
     root_prepare
-    
 }
 
 
