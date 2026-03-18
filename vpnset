@@ -184,14 +184,14 @@ function root_prepare {
         apt-get update && apt-get upgrade -u
         apt-get install -y vim mc less lsof plocate git curl wget aptitude easy-rsa
         apt-get install -y iptables iptables-persistent wireguard 
-        apt-get remove -y zabbix-agent-timeweb
+        #apt-get remove -y zabbix-agent-timeweb
 
         # debian13 dnscrypt-proxy setup
         
         
-        apt-get install -y dnscrypt-proxy
-        systemctl disable systemd-resolved
-        systemctl stop systemd-resolved
+        #apt-get install -y dnscrypt-proxy
+        #systemctl disable systemd-resolved
+        #systemctl stop systemd-resolved
         
     fi
     
@@ -199,12 +199,12 @@ function root_prepare {
         warn 'Debian 12 detected.'
         apt-get update && apt-get upgrade -u
         apt-get install -y vim mc less lsof mlocate git curl wget aptitude easy-rsa
-        apt-get install -y iptables iptables-persistent wireguard openvpn shadowsocks-libev
-        apt-get remove -y zabbix-agent-timeweb
+        apt-get install -y iptables iptables-persistent wireguard
+        #apt-get remove -y zabbix-agent-timeweb
 
         # debian12 do not contain dnscrypt-proxy
         # run dnscrypt_proxy_opt
-        dnscrypt_proxy_opt
+        #dnscrypt_proxy_opt
     fi
 
 
@@ -212,12 +212,12 @@ function root_prepare {
         warn 'Debian 11 detected.'
         apt-get update && apt-get upgrade -u
         apt-get install -y vim mc less lsof mlocate git curl wget aptitude easy-rsa
-        apt-get install -y iptables iptables-persistent wireguard openvpn shadowsocks-libev
-        apt-get remove -y zabbix-agent-timeweb
+        apt-get install -y iptables iptables-persistent wireguard
+        #apt-get remove -y zabbix-agent-timeweb
 
         # debian11
         # run dnscrypt_proxy_opt from scratch
-        dnscrypt_proxy_opt
+        #dnscrypt_proxy_opt
     fi
 
 
@@ -249,7 +249,7 @@ function root_prepare {
 
 
     
-    dnscrypt_proxy_configure
+    #dnscrypt_proxy_configure
     
     
 }
