@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version 0.6
+# version 0.7
 #
 # wget https://raw.githubusercontent.com/western/vpnset/dev/vpnset && chmod +x vpnset
 #
@@ -30,7 +30,7 @@ function main {
 
 
     PS3='Please enter your choice number: '
-    options=("init" "wireguard_init" "openvpn_init" "wireguard_status" "wireguard_new_client" "openvpn_status" "openvpn_new_client" "wireguard_enable" "openvpn_enable" "quit")
+    options=("init" "wireguard_init" "wireguard_status" "wireguard_new_client" "wireguard_enable" "wireguard_disable" "quit")
     select opt in "${options[@]}"
     do
         case $opt in
@@ -57,19 +57,7 @@ function main {
                 break
 
                 ;;
-            "openvpn_init")
-                
-                openvpn_prepare
-                openvpn_client_gen "client1"
-                openvpn_client_mobile_gen "client2"
-                openvpn_client_gen "client3"
-                openvpn_client_gen "client4"
-
-                #shadowsocks_prepare
-
-                break
-
-                ;;
+            
             "wireguard_status")
 
                 systemctl status wg-quick@wg0.service
@@ -91,44 +79,20 @@ function main {
                 break
 
                 ;;
-            "openvpn_status")
-
-                systemctl status openvpn@server
-
-                break
-
-                ;;
-            "openvpn_new_client")
-
-                read -p "Please input client name: " response
-                echo $response
-
-                if [ "$response" != "" ]; then
-                    openvpn_client_gen $response
-                else
-                    echo "You do not enter name"
-                fi
-
-                break
-
-                ;;
+            
             "wireguard_enable")
 
-                systemctl stop openvpn@server
-                systemctl disable openvpn@server
                 systemctl start wg-quick@wg0.service
                 systemctl enable wg-quick@wg0.service
 
                 break
 
                 ;;
-            "openvpn_enable")
+                
+            "wireguard_disable")
 
                 systemctl stop wg-quick@wg0.service
                 systemctl disable wg-quick@wg0.service
-                systemctl start openvpn@server
-                systemctl enable openvpn@server
-
 
                 break
 
